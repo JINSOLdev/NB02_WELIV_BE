@@ -46,13 +46,16 @@ enum NotificationType {
 
 // 사용자 계정
 model User {
-  id            String   @id @default(uuid())
-  name          String
-  email         String   @unique
-  passwordHash String
-  role          UserRole @default(RESIDENT)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  contact   String   @unique
+  name      String
+  email     String   @unique
+  role      UserRole @default(RESIDENT)
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   managedApartment Apartment?     @relation("AdminApartment")
   resident         Resident?
@@ -64,31 +67,32 @@ model User {
 
 // 아파트 정보
 model Apartment {
-  id              String          @id @default(uuid())
-  name            String
-  address         String
-  description     String?
-  officeNumber    String?
+  id           String @id @default(uuid())
+  name         String @unique
+  address      String
+  description  String
+  officeNumber String
+
   apartmentStatus ApartmentStatus @default(PENDING)
 
   // 범위 정보
-  startComplexNumber Int?
-  endComplexNumber   Int?
-  startDongNumber    Int?
-  endDongNumber      Int?
-  startFloorNumber   Int?
-  endFloorNumber     Int?
-  startHoNumber      Int?
-  endHoNumber        Int?
+  startComplexNumber Int
+  endComplexNumber   Int
+  startDongNumber    Int
+  endDongNumber      Int
+  startFloorNumber   Int
+  endFloorNumber     Int
+  startHoNumber      Int
+  endHoNumber        Int
 
-  // 관리자
+  // 관리자 : 아파트 모델의 adminId는 승인 전에는 아직 정해질 수 없음. 즉, 아파트는 생성 시 관리자 미지정 상태여야 함
   adminId String? @unique
   admin   User?   @relation("AdminApartment", fields: [adminId], references: [id])
 
   residents  Resident[]
   notices    Notice[]
   complaints Complaint[]
-  poplls     Poll[]
+  polls      Poll[]
 }
 
 // 입주민 정보 : 아파트 + 사용자 계정 연걸
@@ -102,18 +106,21 @@ model Resident {
 
   user      User      @relation(fields: [userId], references: [id])
   apartment Apartment @relation(fields: [apartmentId], references: [id])
+
+  @@index([apartmentId, dong, ho])
 }
 
 // 공지사항
 model Notice {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   content     String
   apartmentId String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
-  apartment   Apartment @relation(fields: [apartmentId], references: [id])
-  comments    Comment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  apartment Apartment @relation(fields: [apartmentId], references: [id])
+  comments  Comment[]
 }
 
 // 댓글 : 공지, 투표, 민원 공통 사용 가능하도록 boardType + boardId 형태 유지 가능하지만 단순화해서 Notice 전용으로 둠
@@ -138,7 +145,7 @@ model Complaint {
   userId      String
   apartmentId String
   createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   user      User      @relation(fields: [userId], references: [id])
   apartment Apartment @relation(fields: [apartmentId], references: [id])
