@@ -41,6 +41,28 @@ export class AuthService {
       throw new ConflictException('이미 사용중인 연락처입니다.');
 
     // 3. 비밀번호 해싱
-    const passwordHash = await bcrypt 
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // 4. 사용자 생성
+    const { user, resident } = await this.repo.createUserAndResident({
+      username,
+      passwordHash,
+      contact,
+      name,
+      email,
+      apartmentId: apt.id,
+      dong: apartmentDong,
+      ho: apartmentHo,
+    });
+
+    // 5. 스웨거 응답 스펙에 맞춰 반환
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      joinStatus: resident.joinStatus,
+      isActive: user.isActive,
+      role: 'USER',
+    };
   }
 }

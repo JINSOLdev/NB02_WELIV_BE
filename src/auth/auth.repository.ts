@@ -27,48 +27,45 @@ export class AuthRepository {
   // User + Resident 동시에 생성
   async createUserAndResident(params: {
     username: string;
-    password: string;
+    passwordHash: string;
     contact: string;
     name: string;
     email: string;
     apartmentId: string;
-    apartmentName: string;
-    apartmentDong: string;
-    apartmentHo: string;
+    dong: string;
+    ho: string;
   }) {
     const {
       username,
-      password,
+      passwordHash,
       contact,
       name,
       email,
       apartmentId,
-      apartmentName,
-      apartmentDong,
-      apartmentHo,
+      dong,
+      ho,
     } = params;
 
     return this.prisma.$transaction(async (tx) => {
+      // User 생성 (계정 정보만)
       const user = await tx.user.create({
         data: {
           username,
-          password,
+          password: passwordHash,
           contact,
           name,
           email,
           role: UserRole.RESIDENT,
-          apartmentName,
-          apartmentDong,
-          apartmentHo,
         },
       });
 
+      // Resident 생성 (아파트 + 동/호 + 승인 상태)
       const resident = await tx.resident.create({
         data: {
           userId: user.id,
           apartmentId,
-          dong: apartmentDong,
-          ho: apartmentHo,
+          dong,
+          ho,
           joinStatus: JoinStatus.PENDING,
         },
       });
