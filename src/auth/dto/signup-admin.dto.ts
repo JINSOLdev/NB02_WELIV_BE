@@ -46,7 +46,7 @@ export class SignupAdminRequestDto {
 
   @IsString()
   @IsIn(['ADMIN'])
-  role: 'Admin';
+  role: 'ADMIN';
 
   @IsString()
   apartmentName: string;
